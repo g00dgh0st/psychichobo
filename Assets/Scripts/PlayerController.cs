@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour {
   private float lowJumpMultiplier = 2f;
   private float jumpPower = 10f;
   private float jumpBufferTime = 0.2f;
-  private float coyoteJumpTime = 0.1f;
+  private float coyoteJumpTime = 0.15f;
   private float moveSpeed = 5f;
 
   // local state vars
@@ -76,9 +76,11 @@ public class PlayerController : MonoBehaviour {
   }
 
   private void ApplyMove(float horizontal) {
-    anim.SetFloat("moveSpeed", Mathf.Abs(horizontal));
+    if (horizontal == 0) {
+      anim.SetFloat("moveSpeed", Mathf.Lerp(anim.GetFloat("moveSpeed"), horizontal, 0.2f));
+    } else {
+      anim.SetFloat("moveSpeed", Mathf.Abs(horizontal));
 
-    if (horizontal != 0) {
       Vector3 moveDir = Vector3.right.normalized * moveSpeed * horizontal;
       transform.forward = horizontal > 0 ? Vector3.right : Vector3.left;
       moveVector.x = moveDir.x;
