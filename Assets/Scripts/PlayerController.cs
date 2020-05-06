@@ -2,6 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public struct LedgeCatchConfig {
+  public float forwardOffset;
+  public float botY;
+  public float midY;
+  public float topY;
+  public float castDistance;
+  public float yHangOffset;
+  public float xHangOffset;
+}
+
 public class PlayerController : MonoBehaviour {
   // dependencies
   private CharacterController controller;
@@ -16,8 +27,27 @@ public class PlayerController : MonoBehaviour {
   private float jumpBufferTime = 0.2f;
   private float coyoteJumpTime = 0.15f;
   private float moveSpeed = 5f;
+  private LedgeCatchConfig ledgeConfig = new LedgeCatchConfig {
+    forwardOffset = 0.3f,
+    botY = 0.2f,
+    midY = 1.1f,
+    topY = 2f,
+    castDistance = 0.4f,
+    yHangOffset = 2f,
+    xHangOffset = 0.1f
+  };
+  private float ledgeCatchLerpSpeed = 0.1f;
 
   // local state vars
+  private bool isLedgeHanging = false;
+
+  /// NOTE: some state control might help
+  private bool isLedgeCatching = false;
+  private Vector3 ledgeCatchPosition;
+  private Vector3 ledgeCatchStartPosition;
+  private float ledgeCatchLerp;
+
+  private bool isLedgeClimbing = false;
   private bool isGrounded = false;
   private bool hasJumped = false;
   private float lastGroundedTime;
@@ -25,43 +55,90 @@ public class PlayerController : MonoBehaviour {
   private Vector3 moveVector;
   private bool useAnimatorMotion = false;
 
+  [SerializeField]
+  private Transform test1;
+  [SerializeField]
+  private Transform test2;
+
   void Awake() {
     controller = GetComponent<CharacterController>();
     anim = GetComponent<Animator>();
   }
 
-  void Update() {
-    ApplyGravity();
+  private void OnControllerColliderHit(ControllerColliderHit hit) {
+    if (hit.collider.tag == "Ledge" && !isGrounded) {
+      Vector3 forwardVector = transform.position + (transform.forward * ledgeConfig.forwardOffset);
+      bool topHit = false, midHit = false, botHit = false;
 
-    // check for buffered jump
-    if (isGrounded && Time.time - lastJumpButtonPress < jumpBufferTime) {
-      Jump();
+      // check top
+      Vector3 topStart = forwardVector + new Vector3(0, ledgeConfig.topY, 0);
+      topHit = Physics.Raycast(topStart, transform.forward, ledgeConfig.castDistance, groundLayerMask);
+      Vector3 midStart = forwardVector + new Vector3(0, ledgeConfig.midY, 0);
+      midHit = Physics.Raycast(midStart, transform.forward, ledgeConfig.castDistance, groundLayerMask);
+      Vector3 botStart = forwardVector + new Vector3(0, ledgeConfig.botY, 0);
+      botHit = Physics.Raycast(botStart, transform.forward, ledgeConfig.castDistance, groundLayerMask);
+
+      if (topHit) {
+        // too high
+        // print("TOO HIGH");
+        return;
+      } else if (midHit) {
+        // print("high catch");
+        CatchLedge(true, hit.collider);
+        // high catch
+      } else if (botHit) {
+        // print("low catch");
+        // low catch
+      }
+
+      // no catch
     }
+  }
 
-    // float v = Input.GetAxis("Vertical");
-    float h = Input.GetAxisRaw("Horizontal");
-    ApplyMove(h);
+  void Update() {
+    if (!isLedgeHanging) {
+      ApplyGravity();
 
-    if (Input.GetButtonDown("Jump")) {
-      if (isGrounded) {
-        // standard jump
-        Jump();
-      } else if (!hasJumped && Time.time - lastGroundedTime < coyoteJumpTime) {
-        // coyote jump
+      // check for buffered jump
+      if (isGrounded && Time.time - lastJumpButtonPress < jumpBufferTime) {
         Jump();
       }
 
-      // buffer jump
-      lastJumpButtonPress = Time.time;
+      // float v = Input.GetAxis("Vertical");
+      float h = Input.GetAxisRaw("Horizontal");
+      ApplyMovement(h);
+
+      if (Input.GetButtonDown("Jump")) {
+        if (isGrounded) {
+          // standard jump
+          Jump();
+        } else if (!hasJumped && Time.time - lastGroundedTime < coyoteJumpTime) {
+          // coyote jump
+          Jump();
+        }
+
+        // buffer jump
+        lastJumpButtonPress = Time.time;
+      }
+
+      MakeMove();
+    } else {
+      if (isLedgeCatching) {
+        ledgeCatchLerp += Time.deltaTime / ledgeCatchLerpSpeed;
+        print(ledgeCatchLerpSpeed / ledgeCatchLerp);
+        transform.position = Vector3.Lerp(ledgeCatchStartPosition, ledgeCatchPosition, ledgeCatchLerp);
+
+        if (transform.position == ledgeCatchPosition) isLedgeCatching = false;
+      } else if (Input.GetKeyDown(KeyCode.W)) {
+        ClimbLedge();
+      }
     }
 
-    MakeMove();
   }
 
   void OnAnimatorMove() {
-    if (useAnimatorMotion) {
-      controller.Move(anim.deltaPosition);
-      transform.forward = anim.deltaRotation * transform.forward;
+    if (isLedgeClimbing) {
+      transform.position += anim.deltaPosition;
     }
   }
 
@@ -75,7 +152,7 @@ public class PlayerController : MonoBehaviour {
     moveVector.y = jumpPower;
   }
 
-  private void ApplyMove(float horizontal) {
+  private void ApplyMovement(float horizontal) {
     if (horizontal == 0) {
       anim.SetFloat("moveSpeed", Mathf.Lerp(anim.GetFloat("moveSpeed"), horizontal, 0.2f));
     } else {
@@ -114,6 +191,34 @@ public class PlayerController : MonoBehaviour {
     return false;
   }
 
+  void CatchLedge(bool isHigh, Collider ledgeCollider) {
+    isLedgeHanging = true;
+    anim.SetBool("ledgeHanging", true);
+    moveVector = Vector3.zero;
+    controller.enabled = false;
+
+    Bounds bds = ledgeCollider.bounds;
+    float hangingXPos;
+
+    if (transform.forward.x > 0) {
+      // facing right
+      hangingXPos = bds.min.x - ledgeConfig.xHangOffset;
+    } else {
+      // facing left
+      hangingXPos = bds.max.x + ledgeConfig.xHangOffset;
+    }
+
+    isLedgeCatching = true;
+    ledgeCatchStartPosition = transform.position;
+    ledgeCatchPosition = new Vector3(hangingXPos, bds.max.y - ledgeConfig.yHangOffset, 0);
+    ledgeCatchLerp = 0f;
+  }
+
+  void ClimbLedge() {
+    isLedgeClimbing = true;
+    anim.SetTrigger("ledgeClimb");
+  }
+
   void Land() {
     isGrounded = true;
     anim.SetBool("grounded", true);
@@ -128,12 +233,13 @@ public class PlayerController : MonoBehaviour {
     anim.SetBool("grounded", false);
   }
 
-  void TurnEvent(string type) {
-    if (type == "start") {
-      useAnimatorMotion = true;
-    } else {
-      useAnimatorMotion = false;
-
+  // Animation Events
+  void LedgeClimbEvent(string type) {
+    if (type == "end") {
+      anim.SetBool("ledgeHanging", false);
+      isLedgeHanging = false;
+      isLedgeClimbing = false;
+      controller.enabled = true;
     }
   }
 }
