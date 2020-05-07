@@ -9,7 +9,9 @@ public struct LedgeCatchConfig {
   public float midY;
   public float topY;
   public float castDistance;
+  public float yLowCatchOffset;
   public float yHangOffset;
+  public float xLowCatchOffset;
   public float xHangOffset;
 }
 
@@ -33,6 +35,8 @@ public class PlayerController : MonoBehaviour {
     midY = 1.1f,
     topY = 2f,
     castDistance = 0.4f,
+    yLowCatchOffset = .8f,
+    xLowCatchOffset = 0.35f,
     yHangOffset = 2f,
     xHangOffset = 0.1f
   };
@@ -46,6 +50,7 @@ public class PlayerController : MonoBehaviour {
   private Vector3 ledgeCatchPosition;
   private Vector3 ledgeCatchStartPosition;
   private float ledgeCatchLerp;
+  private bool isOnHighLedge = false;
 
   private bool isLedgeClimbing = false;
   private bool isGrounded = false;
@@ -54,11 +59,6 @@ public class PlayerController : MonoBehaviour {
   private float lastJumpButtonPress;
   private Vector3 moveVector;
   private bool useAnimatorMotion = false;
-
-  [SerializeField]
-  private Transform test1;
-  [SerializeField]
-  private Transform test2;
 
   void Awake() {
     controller = GetComponent<CharacterController>();
@@ -80,15 +80,13 @@ public class PlayerController : MonoBehaviour {
 
       if (topHit) {
         // too high
-        // print("TOO HIGH");
         return;
       } else if (midHit) {
-        // print("high catch");
-        CatchLedge(true, hit.collider);
         // high catch
+        CatchLedge(true, hit.collider);
       } else if (botHit) {
-        // print("low catch");
         // low catch
+        CatchLedge(false, hit.collider);
       }
 
       // no catch
@@ -125,15 +123,23 @@ public class PlayerController : MonoBehaviour {
     } else {
       if (isLedgeCatching) {
         ledgeCatchLerp += Time.deltaTime / ledgeCatchLerpSpeed;
-        print(ledgeCatchLerpSpeed / ledgeCatchLerp);
         transform.position = Vector3.Lerp(ledgeCatchStartPosition, ledgeCatchPosition, ledgeCatchLerp);
 
         if (transform.position == ledgeCatchPosition) isLedgeCatching = false;
-      } else if (Input.GetKeyDown(KeyCode.W)) {
-        ClimbLedge();
+      } else {
+        if (!isOnHighLedge) {
+          ClimbLedge();
+        } else {
+          if (Input.GetKeyDown(KeyCode.W)) {
+            ClimbLedge();
+
+          } else if (Input.GetKeyDown(KeyCode.S)) {
+            ReleaseLedge();
+          }
+
+        }
       }
     }
-
   }
 
   void OnAnimatorMove() {
@@ -193,30 +199,54 @@ public class PlayerController : MonoBehaviour {
 
   void CatchLedge(bool isHigh, Collider ledgeCollider) {
     isLedgeHanging = true;
-    anim.SetBool("ledgeHanging", true);
     moveVector = Vector3.zero;
     controller.enabled = false;
-
     Bounds bds = ledgeCollider.bounds;
-    float hangingXPos;
-
-    if (transform.forward.x > 0) {
-      // facing right
-      hangingXPos = bds.min.x - ledgeConfig.xHangOffset;
-    } else {
-      // facing left
-      hangingXPos = bds.max.x + ledgeConfig.xHangOffset;
-    }
 
     isLedgeCatching = true;
     ledgeCatchStartPosition = transform.position;
-    ledgeCatchPosition = new Vector3(hangingXPos, bds.max.y - ledgeConfig.yHangOffset, 0);
     ledgeCatchLerp = 0f;
+
+    anim.ResetTrigger("ledgeClimb");
+    anim.SetBool("ledgeHanging", true);
+    if (isHigh) {
+      anim.SetBool("isHighLedge", true);
+      isOnHighLedge = true;
+      float hangingXPos;
+      if (transform.forward.x > 0) {
+        // facing right
+        hangingXPos = bds.min.x - ledgeConfig.xHangOffset;
+      } else {
+        // facing left
+        hangingXPos = bds.max.x + ledgeConfig.xHangOffset;
+      }
+
+      ledgeCatchPosition = new Vector3(hangingXPos, bds.max.y - ledgeConfig.yHangOffset, 0);
+    } else {
+      anim.SetBool("isHighLedge", false);
+      isOnHighLedge = false;
+      float hangingXPos;
+      if (transform.forward.x > 0) {
+        // facing right
+        hangingXPos = bds.min.x - ledgeConfig.xLowCatchOffset;
+      } else {
+        // facing left
+        hangingXPos = bds.max.x + ledgeConfig.xLowCatchOffset;
+      }
+
+      ledgeCatchPosition = new Vector3(hangingXPos, bds.max.y - ledgeConfig.yLowCatchOffset, 0);
+    }
+
   }
 
   void ClimbLedge() {
     isLedgeClimbing = true;
     anim.SetTrigger("ledgeClimb");
+  }
+
+  void ReleaseLedge() {
+    isLedgeHanging = false;
+    LedgeClimbEvent("end");
   }
 
   void Land() {
