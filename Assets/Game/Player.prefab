@@ -67,8 +67,6 @@ MonoBehaviour:
   groundLayerMask:
     serializedVersion: 2
     m_Bits: 256
-  test1: {fileID: 0}
-  test2: {fileID: 0}
 --- !u!95 &422648941
 Animator:
   serializedVersion: 3
