@@ -139,7 +139,7 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
+  m_TransitionDuration: 0.15
   m_TransitionOffset: 0
   m_ExitTime: 0.70000005
   m_HasExitTime: 0
@@ -208,7 +208,7 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
+  m_TransitionDuration: 0.15
   m_TransitionOffset: 0
   m_ExitTime: 0.70000005
   m_HasExitTime: 0
@@ -780,19 +780,19 @@ AnimatorStateMachine:
     m_Position: {x: 220, y: -240, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 7622850305453976835}
-    m_Position: {x: 620, y: -350, z: 0}
+    m_Position: {x: 640, y: -340, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -2645039058641920615}
     m_Position: {x: 780, y: -220, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1750645887576373198}
-    m_Position: {x: 320, y: -350, z: 0}
+    m_Position: {x: 350, y: -340, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 5970585498774129976}
-    m_Position: {x: 240, y: -130, z: 0}
+    m_Position: {x: 310, y: -100, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1187049964162423788}
-    m_Position: {x: 620, y: -130, z: 0}
+    m_Position: {x: 690, y: -100, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -801,7 +801,7 @@ AnimatorStateMachine:
   m_AnyStatePosition: {x: 50, y: -60, z: 0}
   m_EntryPosition: {x: 50, y: 120, z: 0}
   m_ExitPosition: {x: 800, y: 120, z: 0}
-  m_ParentStateMachinePosition: {x: 500, y: 30, z: 0}
+  m_ParentStateMachinePosition: {x: 500, y: 50, z: 0}
   m_DefaultState: {fileID: 5904784456269341024}
 --- !u!1101 &-352464332553509976
 AnimatorStateTransition:
@@ -915,7 +915,7 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
+  m_TransitionDuration: 0.15
   m_TransitionOffset: 0
   m_ExitTime: 0.70000005
   m_HasExitTime: 0
@@ -1006,7 +1006,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ClimbLadder_Left_Down
-  m_Speed: -1
+  m_Speed: -2
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -2996912880473881452}
@@ -1107,7 +1107,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ClimbLadder_Left
-  m_Speed: 1
+  m_Speed: 2
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -7939193747966290228}
@@ -1145,7 +1145,7 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
+  m_TransitionDuration: 0.15
   m_TransitionOffset: 0
   m_ExitTime: 0.70000005
   m_HasExitTime: 0
@@ -1312,7 +1312,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ClimbLadder_Right_Down
-  m_Speed: -1
+  m_Speed: -2
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -8307765200518764154}
@@ -1437,7 +1437,7 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
+  m_TransitionDuration: 0.15
   m_TransitionOffset: 0
   m_ExitTime: 0.9
   m_HasExitTime: 0
@@ -1453,7 +1453,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ClimbLadder_Right
-  m_Speed: 1
+  m_Speed: 2
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -352464332553509976}
@@ -1513,9 +1513,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
+  m_TransitionDuration: 0.15000033
   m_TransitionOffset: 0
-  m_ExitTime: 0.9
+  m_ExitTime: 0.93732
   m_HasExitTime: 0
   m_HasFixedDuration: 1
   m_InterruptionSource: 0

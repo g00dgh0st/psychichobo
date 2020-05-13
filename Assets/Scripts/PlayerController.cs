@@ -50,6 +50,7 @@ public class PlayerController : MonoBehaviour {
   private bool isLedgeCatching = false;
   private Vector3 ledgeCatchPosition;
   private Vector3 ledgeCatchStartPosition;
+  private Quaternion ledgeCatchStartRotation;
   private float ledgeCatchLerp;
   private bool isOnHighLedge = false;
 
@@ -62,13 +63,11 @@ public class PlayerController : MonoBehaviour {
   private bool useAnimatorMotion = false;
 
   private Collider currentLadder;
+  private Collider lastLadder;
   private bool isLadderClimbing;
 
   public void AttachLadder(Collider ladder) {
     currentLadder = ladder;
-    // if (!isGrounded) {
-    //   ClimbLadder();
-    // }
   }
 
   public void DetachLadder() {
@@ -163,11 +162,28 @@ public class PlayerController : MonoBehaviour {
         }
       }
     } else if (isLadderClimbing) {
-      float v = Input.GetAxis("Vertical");
-      anim.SetFloat("moveSpeed", v);
+      if (isLedgeCatching) {
+        // NOTE: this is shite
+        ledgeCatchLerp += Time.deltaTime / ledgeCatchLerpSpeed;
+        transform.position = Vector3.Lerp(ledgeCatchStartPosition, ledgeCatchPosition, ledgeCatchLerp);
 
-      if (Input.GetButtonDown("Jump")) {
-        ReleaseLadder();
+        transform.rotation = Quaternion.Lerp(ledgeCatchStartRotation, Quaternion.LookRotation(Vector3.forward), ledgeCatchLerp);
+
+        if (transform.position == ledgeCatchPosition) isLedgeCatching = false;
+      } else {
+        float v = Input.GetAxis("Vertical");
+
+        if (v != 0 && CheckLadderBounds(v > 0)) {
+          anim.SetFloat("moveSpeed", v);
+        } else {
+          anim.SetFloat("moveSpeed", 0f);
+        }
+
+        if (Input.GetButtonDown("Jump")) {
+          ReleaseLadder();
+          if (Input.GetAxis("Vertical") != 0 || Input.GetAxis("Horizontal") != 0)
+            Jump();
+        }
       }
     }
   }
@@ -180,6 +196,7 @@ public class PlayerController : MonoBehaviour {
 
   private void MakeMove() {
     controller.Move(moveVector * Time.deltaTime);
+    transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z);
   }
 
   private void Jump() {
@@ -218,6 +235,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     Airborne();
+    if (currentLadder != null && currentLadder != lastLadder) { ClimbLadder(); }
 
     if (moveVector.y <= 0) {
       moveVector += Physics.gravity * Time.deltaTime * (fallMultiplier);
@@ -239,6 +257,7 @@ public class PlayerController : MonoBehaviour {
     // TODO: reuse ledge catching lerp for ladder and rope, etc
     isLedgeCatching = true;
     ledgeCatchStartPosition = transform.position;
+    ledgeCatchStartRotation = transform.rotation;
     ledgeCatchLerp = 0f;
 
     anim.ResetTrigger("ledgeClimb");
@@ -273,20 +292,37 @@ public class PlayerController : MonoBehaviour {
 
   }
 
+  bool CheckLadderBounds(bool movingUp) {
+    if (movingUp) {
+      return transform.position.y < currentLadder.bounds.max.y;
+    } else {
+      return transform.position.y > currentLadder.bounds.min.y;
+    }
+  }
+
   void ClimbLadder() {
+    lastLadder = null;
     anim.SetBool("ladderClimb", true);
     isLadderClimbing = true;
     moveVector = Vector3.zero;
     controller.enabled = false;
     Bounds bds = currentLadder.bounds;
-    transform.position = new Vector3(bds.center.x, transform.position.y, 0f);
-    transform.forward = Vector3.forward;
+
+    // TODO: reuse ledge catching lerp for ladder and rope, etc
+    isLedgeCatching = true;
+    ledgeCatchStartPosition = transform.position;
+    ledgeCatchLerp = 0f;
+
+    ledgeCatchPosition = new Vector3(bds.center.x, transform.position.y, 0f);
   }
 
   void ReleaseLadder() {
+    lastLadder = currentLadder;
     anim.SetBool("ladderClimb", false);
-    DetachLadder();
     controller.enabled = true;
+    // NOTE: this makes the controller check and realize its not grounded
+    controller.Move(Vector3.zero);
+    DetachLadder();
   }
 
   void ClimbLedge() {
@@ -302,6 +338,7 @@ public class PlayerController : MonoBehaviour {
 
   void Land() {
     isGrounded = true;
+    lastLadder = null;
     anim.SetBool("grounded", true);
     hasJumped = false;
   }
@@ -321,6 +358,8 @@ public class PlayerController : MonoBehaviour {
       isLedgeHanging = false;
       isLedgeClimbing = false;
       controller.enabled = true;
+      // NOTE: this makes the controller check and realize its not grounded
+      controller.Move(Vector3.zero);
     }
   }
 }
