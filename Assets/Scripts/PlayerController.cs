@@ -118,7 +118,7 @@ public class PlayerController : MonoBehaviour {
         Jump();
       }
 
-      if (currentLadder != null && Input.GetKeyDown(KeyCode.W)) {
+      if (isGrounded && currentLadder != null && Input.GetAxis("Vertical") != 0 && CheckLadderBounds(Input.GetAxis("Vertical") > 0)) {
         // NOTE: TEMP CRAP
         ClimbLadder();
         return;
@@ -164,9 +164,8 @@ public class PlayerController : MonoBehaviour {
     } else if (isLadderClimbing) {
       if (isLedgeCatching) {
         // NOTE: this is shite
-        ledgeCatchLerp += Time.deltaTime / ledgeCatchLerpSpeed;
+        ledgeCatchLerp += Time.deltaTime / ledgeCatchLerpSpeed * 2f;
         transform.position = Vector3.Lerp(ledgeCatchStartPosition, ledgeCatchPosition, ledgeCatchLerp);
-
         transform.rotation = Quaternion.Lerp(ledgeCatchStartRotation, Quaternion.LookRotation(Vector3.forward), ledgeCatchLerp);
 
         if (transform.position == ledgeCatchPosition) isLedgeCatching = false;
@@ -257,7 +256,6 @@ public class PlayerController : MonoBehaviour {
     // TODO: reuse ledge catching lerp for ladder and rope, etc
     isLedgeCatching = true;
     ledgeCatchStartPosition = transform.position;
-    ledgeCatchStartRotation = transform.rotation;
     ledgeCatchLerp = 0f;
 
     anim.ResetTrigger("ledgeClimb");
@@ -310,6 +308,7 @@ public class PlayerController : MonoBehaviour {
 
     // TODO: reuse ledge catching lerp for ladder and rope, etc
     isLedgeCatching = true;
+    ledgeCatchStartPosition = transform.position;
     ledgeCatchStartPosition = transform.position;
     ledgeCatchLerp = 0f;
 
