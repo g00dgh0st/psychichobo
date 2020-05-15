@@ -89,17 +89,17 @@ public class PlayerController : MonoBehaviour {
       Vector3 topStart = forwardVector + new Vector3(0, ledgeConfig.topY, 0);
       topHit = Physics.Raycast(topStart, transform.forward, ledgeConfig.castDistance, groundLayerMask);
       Vector3 midStart = forwardVector + new Vector3(0, ledgeConfig.midY, 0);
-      midHit = Physics.Raycast(midStart, transform.forward, ledgeConfig.castDistance, groundLayerMask);
+      midHit = Physics.Raycast(midStart, transform.forward, out RaycastHit midHitInfo, ledgeConfig.castDistance, groundLayerMask);
       Vector3 botStart = forwardVector + new Vector3(0, ledgeConfig.botY, 0);
-      botHit = Physics.Raycast(botStart, transform.forward, ledgeConfig.castDistance, groundLayerMask);
+      botHit = Physics.Raycast(botStart, transform.forward, out RaycastHit lowHitInfo, ledgeConfig.castDistance, groundLayerMask);
 
       if (topHit) {
         // too high
         return;
-      } else if (midHit) {
+      } else if (midHit && midHitInfo.collider == hit.collider) {
         // high catch
         CatchLedge(true, hit.collider);
-      } else if (botHit) {
+      } else if (botHit && lowHitInfo.collider == hit.collider) {
         // low catch
         CatchLedge(false, hit.collider);
       }
