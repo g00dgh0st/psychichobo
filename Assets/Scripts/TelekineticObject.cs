@@ -83,7 +83,7 @@ public class TelekineticObject : MonoBehaviour {
   private AnimationCurve fullMovementCurve;
 
   private float maxVelocity = 15f;
-  private float lowMovementMaxDistance = 1.5f;
+  private float lowMovementMaxDistance = 1f;
   private float lowMovementMaxVelocity = 3f;
   private float fullMovementMaxDistance = 6f;
   private float fullMovementMaxVelocity = 20f;
