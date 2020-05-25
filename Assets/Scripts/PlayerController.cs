@@ -105,6 +105,8 @@ public class PlayerController : MonoBehaviour {
       }
 
       // no catch
+    } else if (hit.collider.tag == Tags.Slide) {
+      print("slidy boi");
     }
   }
 
