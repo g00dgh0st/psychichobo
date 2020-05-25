@@ -194,8 +194,9 @@ public class PlayerController : MonoBehaviour {
   }
 
   private void MakeMove() {
+    moveVector.z = 0f;
     controller.Move(moveVector * Time.deltaTime);
-    transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+    // transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z);
   }
 
   private void Jump() {
