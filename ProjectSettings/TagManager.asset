@@ -7,6 +7,7 @@ TagManager:
   - Ledge
   - Ladder
   - Slide
+  - Special
   layers:
   - Default
   - TransparentFX

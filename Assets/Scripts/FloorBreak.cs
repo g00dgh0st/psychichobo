@@ -5,10 +5,7 @@ using UnityEngine;
 
 public class FloorBreak : MonoBehaviour {
 
-  void OnCollisionEnter(Collision other) {
-    print("breaky");
-    if (other.collider.tag == Tags.Player) {
-      Destroy(transform.parent.gameObject);
-    }
+  public void Break() {
+    Destroy(transform.parent.gameObject);
   }
 }

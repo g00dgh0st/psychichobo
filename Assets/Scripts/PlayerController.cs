@@ -53,10 +53,11 @@ public class PlayerController : MonoBehaviour {
   private Quaternion ledgeCatchStartRotation;
   private float ledgeCatchLerp;
   private bool isOnHighLedge = false;
-
+  private bool isSliding = false;
   private bool isLedgeClimbing = false;
   private bool isGrounded = false;
   private bool hasJumped = false;
+  private bool momentumJump = false;
   private float lastGroundedTime;
   private float lastJumpButtonPress;
   private Vector3 moveVector;
@@ -81,7 +82,7 @@ public class PlayerController : MonoBehaviour {
   }
 
   private void OnControllerColliderHit(ControllerColliderHit hit) {
-    if (hit.collider.tag == Tags.Ledge && !isGrounded) {
+    if (hit.collider.tag == Tags.Platform.Ledge && !isGrounded) {
       Vector3 forwardVector = transform.position + (transform.forward * ledgeConfig.forwardOffset);
       bool topHit = false, midHit = false, botHit = false;
 
@@ -105,14 +106,17 @@ public class PlayerController : MonoBehaviour {
       }
 
       // no catch
-    } else if (hit.collider.tag == Tags.Slide) {
-      print("slidy boi");
+    } else if (hit.collider.tag == Tags.Platform.Slide && CheckOnSlide()) {
+      Land();
+      StartSlide();
+    } else if (hit.collider.tag == Tags.Platform.Special) {
+      hit.collider.GetComponent<FloorBreak>().Break();
     }
   }
 
   void Update() {
     // TODO: state management here for different control states
-    if (!isLedgeHanging && !isLadderClimbing) {
+    if (!isLedgeHanging && !isLadderClimbing && !isSliding) {
       ApplyGravity();
 
       // check for buffered jump
@@ -186,6 +190,15 @@ public class PlayerController : MonoBehaviour {
             Jump();
         }
       }
+    } else if (isSliding) {
+      if (Input.GetButtonDown("Jump")) {
+        EndSlide();
+        Jump(true);
+      } else {
+        ApplySlide();
+      }
+
+      MakeMove();
     }
   }
 
@@ -201,8 +214,9 @@ public class PlayerController : MonoBehaviour {
     // transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z);
   }
 
-  private void Jump() {
+  private void Jump(bool keepMomentum = false) {
     hasJumped = true;
+    momentumJump = keepMomentum;
     isGrounded = false;
     moveVector.y = jumpPower;
   }
@@ -213,9 +227,15 @@ public class PlayerController : MonoBehaviour {
     } else {
       anim.SetFloat("moveSpeed", Mathf.Abs(horizontal));
 
-      Vector3 moveDir = Vector3.right.normalized * moveSpeed * horizontal;
       transform.forward = horizontal > 0 ? Vector3.right : Vector3.left;
-      moveVector.x = moveDir.x;
+
+      if (!momentumJump) {
+        // free control of movement
+        Vector3 moveDir = Vector3.right.normalized * moveSpeed * horizontal;
+        moveVector.x = moveDir.x;
+      } else {
+        // slower damping of movement, keeping original momentum
+      }
     }
   }
 
@@ -248,6 +268,39 @@ public class PlayerController : MonoBehaviour {
     }
 
     return false;
+  }
+
+  private void ApplySlide() {
+    if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, groundCheckDistance, groundLayerMask, QueryTriggerInteraction.Ignore)) {
+      if (hit.collider.tag == Tags.Platform.Slide) {
+        // slide move
+        moveVector = ((hit.point - transform.position) / Time.deltaTime) + (Vector3.right.normalized * moveSpeed * 2f);
+      } else {
+        // slide over,  grounded
+        Land();
+        EndSlide();
+        print("ground end");
+        moveVector = (hit.point - transform.position) / Time.deltaTime;
+      }
+    } else {
+      // slide over, airborne
+      Airborne();
+      EndSlide();
+      print("airborne end");
+      moveVector = (Vector3.right.normalized * moveSpeed * 2f) - (Physics.gravity * Time.deltaTime);
+    }
+  }
+
+  bool CheckOnSlide() {
+    if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, groundCheckDistance, groundLayerMask, QueryTriggerInteraction.Ignore)) {
+      if (hit.collider.tag == Tags.Platform.Slide) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
   }
 
   void CatchLedge(bool isHigh, Collider ledgeCollider) {
@@ -329,6 +382,7 @@ public class PlayerController : MonoBehaviour {
 
   void ClimbLedge() {
     hasJumped = false;
+    momentumJump = false;
     isLedgeClimbing = true;
     anim.SetTrigger("ledgeClimb");
   }
@@ -343,6 +397,18 @@ public class PlayerController : MonoBehaviour {
     lastLadder = null;
     anim.SetBool("grounded", true);
     hasJumped = false;
+    momentumJump = false;
+
+  }
+
+  void StartSlide() {
+    isSliding = true;
+    anim.SetBool("slide", true);
+  }
+
+  void EndSlide() {
+    isSliding = false;
+    anim.SetBool("slide", false);
   }
 
   void Airborne() {

@@ -25,7 +25,7 @@ public class TelekineticObject : MonoBehaviour {
 
   private void OnCollisionEnter(Collision other) {
     // Doesnt trigger if you unfreeze while player in standing on it
-    if (other.collider.tag == Tags.Player) {
+    if (other.collider.tag == Tags.Entities.Player) {
       EndDrag();
     }
   }
