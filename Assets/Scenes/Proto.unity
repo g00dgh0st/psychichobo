@@ -3946,6 +3946,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SM_Bld_Underpass_01
       objectReference: {fileID: 0}
+    - target: {fileID: 1885255584816614, guid: e9ead1f1db218c548abd3b619ab3aabb, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 4294967295
+      objectReference: {fileID: 0}
     - target: {fileID: 4657839219652416, guid: e9ead1f1db218c548abd3b619ab3aabb, type: 3}
       propertyPath: m_LocalPosition.x
       value: 91.205
@@ -4001,6 +4005,11 @@ PrefabInstance:
     - target: {fileID: 4657839219652416, guid: e9ead1f1db218c548abd3b619ab3aabb, type: 3}
       propertyPath: m_LocalScale.z
       value: 7.821623
+      objectReference: {fileID: 0}
+    - target: {fileID: 23242089189434580, guid: e9ead1f1db218c548abd3b619ab3aabb,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 64011436357758390, guid: e9ead1f1db218c548abd3b619ab3aabb, type: 3}
