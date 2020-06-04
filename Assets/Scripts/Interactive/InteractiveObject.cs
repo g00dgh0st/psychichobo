@@ -7,7 +7,7 @@ using UnityEngine;
 namespace OFR.Psycho.Interactive {
 
   public class InteractiveObject : MonoBehaviour {
-    protected MeshRenderer renderer;
+    protected MeshRenderer renderer = null;
     protected Camera mainCam;
 
     [SerializeField]
